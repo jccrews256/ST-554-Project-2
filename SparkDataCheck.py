@@ -50,6 +50,7 @@ class SparkDataCheck:
             return self.df
         
         # Checking if neither upper or lower is provided
+        # Note that by SQL rules, will return Null when value is Null
         if lower is None and upper is None:
             raise ValueError("At least one of lower and upper must be provided.")
         # If at least one provided, constructing new column name and column
@@ -74,12 +75,42 @@ class SparkDataCheck:
             print("Column must be a string type")
             return self.df
         
-        # Appending the boolean indicating set inclusion (or not)
+        # Appending the boolean column indicating set inclusion (or not)
+        # Note that by SQL rules, will return Null when value is Null
         self.df = self.df.withColumn(column + "_in_set", self.df[column].isin(set))
         
         # Returning the modified dataframe
         return self.df
     
+    # Constructing method that adds a boolean column indicating
+    # whether the values of a pre-existing column are Null or not
+    def is_null(self, column: str):
+        # Appending a boolean column indicating whether or not each value is Null
+        self.df = self.df.withColumn(column + "_is_null", self.df[column].isNull())
+        
+        # Returning the modified dataframe
+        return self.df
+    
+    # Constructing method to return min and mix of user-provided numeric column
+    # across any user-specified grouping variable
+    # If no column specified, min and max returned across all numeric columns
+    def calc_min_max(self, column: str | None = None, groupby: str | None = None):
+        # Confirming column is a numeric column (when specified)
+        # Returning None if not
+        # Returning min's and max's if so
+        if column is not None:
+            if dict(self.df.dtypes)[column] not in ["float", "int", "long", "bigint", "double", "integer"]:
+                print("Column must be a numeric type")
+                return None 
+            elif groupby is not None: # Conditional min and max case
+                self.df.groupBy(groupby).agg(F.min(column), F.max(column)).toPandas()
+            else: # Unconditional case
+                self.df.select(F.min(column), F.max(column)).toPandas()
+        # Returning min's and max's for all numeric variables
+        # when no columns specified
+        else:
+            # Capturing numeric variables 
+        
     
     
         
