@@ -103,13 +103,96 @@ class SparkDataCheck:
                 print("Column must be a numeric type")
                 return None 
             elif groupby is not None: # Conditional min and max case
-                self.df.groupBy(groupby).agg(F.min(column), F.max(column)).toPandas()
+                pd_df = self.df.groupBy(groupby).agg(F.min(column), F.max(column)).toPandas()
             else: # Unconditional case
-                self.df.select(F.min(column), F.max(column)).toPandas()
+                pd_df = self.df.select(F.min(column), F.max(column)).toPandas()
         # Returning min's and max's for all numeric variables
         # when no columns specified
         else:
             # Capturing numeric variables 
+            types = pd.DataFrame(self.df.dtypes, columns = ["variable", "type"])
+            numcols = types[types.type.isin(["float", "int", "long", "bigint", "double", "integer"])].variable
+            
+            # Generating min's and max's in unconditional case
+            if groupby is None:
+                # Generating min and max and capturing in a dataframe
+                # Starting by creating an iteration counter
+                iter = 0
+            
+                # Looping over numeric variables to concatenate their min's and max's in a pandas df
+                for col in numcols:
+                    if iter == 0:
+                        pd_df = self.df.select(F.min(col), F.max(col)).toPandas()
+                    else:
+                        pd_df = pd.concat([pd_df, self.df.select(F.min(col), F.max(col)).toPandas()], axis = 1)
+                    
+                    iter += 1
+                        
+            # Generating min's anbd max's for conditional case
+            else:
+                # Generating min and max and capturing in a dataframe
+                # Starting by creating an iteration counter
+                iter = 0
+
+                # Looping over numeric variables to concatenate their min's and max's in a pandas df                
+                for col in numcols:
+                    if iter == 0:
+                        pd_df = self.df.groupBy(groupby).agg(F.min(col), F.max(col)).toPandas()
+                    else:
+                        pd_df = pd.concat([pd_df, self.df.groupBy(groupby).agg(F.min(col), F.max(col)) \
+                                           .toPandas().drop(columns = groupby)], axis = 1)
+                    iter += 1
+                        
+                        
+        # Returning the resultant pandas dataframe of min's and max's
+        return pd_df
+    
+    # Constructing method to return counts for levels of a single categorical variable or 
+    # combinations of levels for two categorical variables
+    def count_combos(self, column1: str, column2: str | None = None):
+        # Confirming at least one of the two input columns is actually a string
+        if dict(self.df.dtypes)[column1] != "string":
+            # If first column not, check second column (if not None)
+            if column2 is None or dict(self.df.dtypes)[column2] != "string":
+                # If no string columns provided, print message and return None
+                print("Each input column is numeric, but should be string")
+                return None 
+            
+            # Case when second column is a string
+            else: 
+                # Printing message indicating first column numeric
+                print("column1 is numeric, should be string")
+                
+                # Generating counts for each level of column2
+                pd_df = self.df.groupBy(column2).count().toPandas()
+        
+        # Case when first column is a string
+        else:
+            # Case when second column not provided
+            if column2 is None:
+                # Generating counts for each level of column1
+                pd_df = self.df.groupBy(column1).count().toPandas()
+            
+            # Case when second column is numeric
+            elif dict(self.df.dtypes)[column2] != "string":
+                # Printing message indicating second column numeric
+                print("column2 is numeric, should be string")
+                
+                # Generating counts for each level of column1
+                pd_df = self.df.groupBy(column1).count().toPandas()
+                
+            # Case when both columns are strings
+            else:
+                # Generating counts for each combination of levels
+                pd_df = self.df.groupBy([column1, column2]).count().toPandas()
+                
+        # Returning the pandas data frame of counts
+        return pd_df
+    
+    
+        
+            
+            
         
     
     
