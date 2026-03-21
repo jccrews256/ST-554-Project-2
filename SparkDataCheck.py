@@ -69,7 +69,8 @@ class SparkDataCheck:
     
     # Constructing method that adds a boolean column indicating
     # whether the values of a pre-existing string column are in a given set
-    def in_set(self, column: str, set: list[str]):
+    # tag is the stub added to the new column's name for user reference
+    def in_set(self, column: str, levels: list[str], tag: str | None = None):
         # Confirming column is a string column
         if dict(self.df.dtypes)[column] != "string":
             print("Column must be a string type")
@@ -77,7 +78,10 @@ class SparkDataCheck:
         
         # Appending the boolean column indicating set inclusion (or not)
         # Note that by SQL rules, will return Null when value is Null
-        self.df = self.df.withColumn(column + "_in_set", self.df[column].isin(set))
+        if tag is None:
+            self.df = self.df.withColumn(column + "_in_set", self.df[column].isin(levels))
+        else:
+            self.df = self.df.withColumn(column + "_in_set_" + tag, self.df[column].isin(levels))            
         
         # Returning the modified dataframe
         return self.df
@@ -103,7 +107,7 @@ class SparkDataCheck:
                 print("Column must be a numeric type")
                 return None 
             elif groupby is not None: # Conditional min and max case
-                pd_df = self.df.groupBy(groupby).agg(F.min(column), F.max(column)).toPandas()
+                pd_df = self.df.groupBy(groupby).agg(F.min(column), F.max(column)).toPandas().sort_values(groupby)
             else: # Unconditional case
                 pd_df = self.df.select(F.min(column), F.max(column)).toPandas()
         # Returning min's and max's for all numeric variables
@@ -142,6 +146,9 @@ class SparkDataCheck:
                         pd_df = pd.concat([pd_df, self.df.groupBy(groupby).agg(F.min(col), F.max(col)) \
                                            .toPandas().drop(columns = groupby)], axis = 1)
                     iter += 1
+                    
+                # Sorting by groupby
+                pd_df = pd_df.sort_values(groupby)
                         
                         
         # Returning the resultant pandas dataframe of min's and max's
