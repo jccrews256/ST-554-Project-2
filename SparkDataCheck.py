@@ -27,15 +27,17 @@ class SparkDataCheck:
     
     Methods:
         - in_range: a method that takes in a numeric column (column) as well as a
-        lower bound (lower) and/or upper bound (upper), then returns df 
-        with a new Boolean column indicating whether or not the input column's value
-        is in the user-defined range
+        lower bound (lower) and/or upper bound (upper), then returns the updated
+        SparkDataCheck object itself with a new Boolean column in df indicating whether
+         or not the input column's value is in the user-defined range
         - in_set: a method that takes in a string column (column) as well as a list of
-        levels for the column and an optional set tag (tag), then returns df with a new
-        Boolean column (with tag incorporated in the name) indicating whether or 
-        not the input column's value is in the set of levels
-        - is_null: a method that takes in a column (column) and returns df with  a new
-        Boolean column indicating whether or not the input column's value is NULL
+        levels for the column and an optional set tag (tag), then returns the updated
+        SparkDataCheck object with a new Boolean column in df (with tag incorporated 
+        in the name)
+        indicating whether or not the input column's value is in the set of levels
+        - is_null: a method that takes in a column (column) and returns the 
+        updated SparkDataCheck object with a new Boolean column in df indicating 
+        whether or not the input column's value is NULL
         - calc_min_max: a method that optionally takes in a numeric column (column)
         and a grouping column (groupby; can be any type but should conceptually be 
         categorical) and returns the following based on user inputs:
@@ -104,7 +106,7 @@ class SparkDataCheck:
         if dict(self.df.dtypes)[column] not in ["float", "int", "long", "bigint", "double", 
                                                 "integer"]:
             print("Column must be a numeric type")
-            return self.df
+            return self
         
         # Checking if neither upper or lower is provided
         # Note that by SQL rules, will return Null when value is Null
@@ -122,7 +124,7 @@ class SparkDataCheck:
             self.df = self.df.withColumn(new_var, self.df[column].between(lower, upper))
             
         # Returning modified dataframe    
-        return self.df
+        return self
     
     # Constructing method that adds a boolean column indicating
     # whether the values of a pre-existing string column are in a given set
@@ -131,7 +133,7 @@ class SparkDataCheck:
         # Confirming column is a string column
         if dict(self.df.dtypes)[column] != "string":
             print("Column must be a string type")
-            return self.df
+            return self
         
         # Appending the boolean column indicating set inclusion (or not)
         # Note that by SQL rules, will return Null when value is Null
@@ -143,7 +145,7 @@ class SparkDataCheck:
                                          tag, self.df[column].isin(levels))            
         
         # Returning the modified dataframe
-        return self.df
+        return self
     
     # Constructing method that adds a boolean column indicating
     # whether the values of a pre-existing column are Null or not
@@ -152,7 +154,7 @@ class SparkDataCheck:
         self.df = self.df.withColumn(column + "_is_null", self.df[column].isNull())
         
         # Returning the modified dataframe
-        return self.df
+        return self
     
     # Constructing method to return min and mix of user-provided numeric column
     # across any user-specified grouping variable
