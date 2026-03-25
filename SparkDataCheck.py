@@ -9,21 +9,21 @@ import pandas as pd
 
 class SparkDataCheck: 
     '''
-    A class designed to assist the user in validating a PySpark.sql dataframe,
+    A class designed to assist the user in validating a pyspark.sql dataframe,
     stored as the attribute df. 
     
     In addition to using __init__ to directly initialize the class with a 
-    pre-existing PySpark.sql dataframe, there are two convenient class methods
+    pre-existing pyspark.sql dataframe, there are two convenient class methods
     to create an object of class SparkDataCheck:
         - from_csv: a class method that takes in the Spark session (spark) and
         a file path to a csv data file (csv_path) as inputs to create the object,
-        storing the dataset as a PySpark.sql dataframe in df
+        storing the dataset as a pyspark.sql dataframe in df
         - from_pddf: a class method that takes in the Spark session (spark) and
         a pandas dataframe (pd_df) as inputs to create the object, storing the 
-        dataset as a PySpark.sql dataframe in df
+        dataset as a pyspark.sql dataframe in df
         
     Note that these two class methods will not produce identical results because
-    pandas and PySpark.sql exhibit different csv-to-dataframe behaviors. 
+    pandas and pyspark.sql exhibit different csv-to-dataframe behaviors. 
     
     Methods:
         - in_range: a method that takes in a numeric column (column) as well as a
